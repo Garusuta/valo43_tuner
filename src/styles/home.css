@@ -182,3 +182,68 @@
   font-weight: 500;
   color: var(--accent-red);
 }
+
+/* 关于卡片 */
+.about-card h2 {
+  margin-bottom: 16px;
+}
+
+.about-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.author-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.author-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.author-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.links-container {
+  display: flex;
+  gap: 12px;
+}
+
+.link-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.link-btn:hover {
+  border-color: var(--accent-red);
+  background-color: rgba(255, 70, 85, 0.1);
+}
+
+.link-icon {
+  font-size: 16px;
+}
+
+.link-text {
+  font-weight: 500;
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import Switch from '../components/Switch';
 import '../styles/home.css';
 
@@ -120,6 +121,33 @@ const Home: React.FC = () => {
             <div className="config-item">
               <span className="config-label">游戏分辨率</span>
               <span className="config-value">1568 × 1080 @ 144Hz</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 作者信息卡片 */}
+        <div className="card about-card">
+          <h2>关于</h2>
+          <div className="about-content">
+            <div className="author-info">
+              <span className="author-label">作者</span>
+              <span className="author-name">Garusuta</span>
+            </div>
+            <div className="links-container">
+              <button 
+                className="link-btn"
+                onClick={() => openUrl('https://github.com/Garusuta/valo43_tuner')}
+              >
+                <span className="link-icon">📦</span>
+                <span className="link-text">GitHub 仓库</span>
+              </button>
+              <button 
+                className="link-btn"
+                onClick={() => openUrl('https://github.com/Garusuta/valo43_tuner/releases')}
+              >
+                <span className="link-icon">🚀</span>
+                <span className="link-text">检查更新</span>
+              </button>
             </div>
           </div>
         </div>

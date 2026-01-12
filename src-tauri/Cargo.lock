@@ -4384,7 +4384,7 @@ dependencies = [
 
 [[package]]
 name = "valo43_tuner"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "encoding",
  "rust-embed",
