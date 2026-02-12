@@ -33,7 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <AntLayout style={{ minHeight: '100vh', minWidth: 800 }}>
       <Sider width={200} style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}>
         <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #f0f0f0' }}>
-          <h2 style={{ margin: 0, color: '#1890ff' }}>游戏监听器</h2>
+          <h2 style={{ margin: 0, color: '#1890ff' }}>FPSEnhancer</h2>
         </div>
         <Menu
           mode="inline"
