@@ -9,7 +9,7 @@ pub async fn scan_game_path() -> Result<(), String> {
     app_config.valorant.launcher_path =
         get_running_process_path("无畏契约登录器.exe").map(|p| p.to_string_lossy().into_owned());
     app_config.valorant.game_path =
-        get_running_process_path("VALORANT.exe").map(|p| p.to_string_lossy().into_owned());
+        get_running_process_path("VALORANT.exe").map(|p| p.parent().unwrap().to_string_lossy().into_owned());
     save_all_config(app_config)?;
     Ok(())
 }
