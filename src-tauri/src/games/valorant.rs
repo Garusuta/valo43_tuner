@@ -1,24 +1,16 @@
 use std::{
-    collections::HashMap,
-    error::Error,
-    fs::{read_dir, read_to_string},
-    path::{Path, PathBuf},
+    collections::HashMap, error::Error, fs::{read_dir, read_to_string}, path::{Path, PathBuf}
 };
 
-use tauri::State;
 use tracing::{debug, info};
 
 use crate::{
-    config::{load_all_config, load_valrant_config, load_watcher_config, save_all_config},
-    display::DisplayMode,
-    state::AppState,
-    utils::{insert_line_at, replace_multiple_parallel, run_command},
-    watcher::ProcessWatcher,
+    configs::app_config::AppConfig, utils::{command_manager::run_command, text_manager::{insert_line_at, replace_multiple_parallel}}
 };
 use std::fs::write;
 
 fn get_last_login_user() -> Result<String, Box<dyn Error>> {
-    let config = load_valrant_config()?;
+    let config = AppConfig::load_valrant_config()?;
     let user_info = read_to_string(
         Path::new(&config.game_path.unwrap())
             .join("ShooterGame\\Saved\\Config\\WindowsClient\\RiotLocalMachine.ini"),
@@ -33,9 +25,9 @@ fn get_last_login_user() -> Result<String, Box<dyn Error>> {
     Ok(last_login_user)
 }
 
-fn get_last_login_user_folder() -> Result<String, Box<dyn Error>> {
+pub fn get_last_login_user_folder() -> Result<String, Box<dyn Error>> {
     let user_name = get_last_login_user()?;
-    let game_path = load_valrant_config()?.game_path;
+    let game_path = AppConfig::load_valrant_config()?.game_path;
     let user_name_folder =
         read_dir(Path::new(&game_path.unwrap()).join("ShooterGame\\Saved\\Config"))?
             .filter_map(|entry| entry.ok())
@@ -54,8 +46,8 @@ fn get_last_login_user_folder() -> Result<String, Box<dyn Error>> {
     Ok(user_name_folder)
 }
 
-fn modify_game_resolution_config(settings_path: PathBuf) -> Result<(), Box<dyn Error>> {
-    let config = load_watcher_config()?;
+pub fn modify_game_resolution_config(settings_path: PathBuf) -> Result<(), Box<dyn Error>> {
+    let config = AppConfig::load_watcher_config()?;
     let mut settings_content = read_to_string(&settings_path)?;
     debug!("Original settings content: \n{}", settings_content);
     let mut replacements: HashMap<usize, String> = HashMap::new();
@@ -143,58 +135,5 @@ fn modify_game_resolution_config(settings_path: PathBuf) -> Result<(), Box<dyn E
     write(settings_path.clone(), settings_content)?;
     debug!("Locking file: {}", target_file);
     run_command(&["attrib", "+R", target_file])?;
-    Ok(())
-}
-
-pub fn modify_game_resolution_config_for_last_user() -> Result<(), Box<dyn Error>> {
-    let config = load_valrant_config()?;
-    let user_name = get_last_login_user_folder()?;
-    let user_settings_path = Path::new(&config.game_path.clone().unwrap()).join(format!(
-        "ShooterGame\\Saved\\Config\\{}\\WindowsClient\\GameUserSettings.ini",
-        user_name
-    ));
-    let public_settings_path = Path::new(&config.game_path.clone().unwrap())
-        .join("ShooterGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini");
-    info!("Modifying settings file: {:?}", user_settings_path);
-    modify_game_resolution_config(user_settings_path)?;
-    info!("Modifying settings file: {:?}", public_settings_path);
-    modify_game_resolution_config(public_settings_path)?;
-    Ok(())
-}
-
-#[tauri::command]
-pub fn restore_file_pemission() -> Result<(), String> {
-    let config = load_valrant_config().map_err(|e| e.to_string())?;
-    let user_name = get_last_login_user_folder().map_err(|e| e.to_string())?;
-    let user_settings_path = Path::new(&config.game_path.clone().unwrap()).join(format!(
-        "ShooterGame\\Saved\\Config\\{}\\WindowsClient\\GameUserSettings.ini",
-        user_name
-    ));
-    let public_settings_path = Path::new(&config.game_path.clone().unwrap())
-        .join("ShooterGame\\Saved\\Config\\WindowsClient\\GameUserSettings.ini");
-    run_command(&["attrib", "-R", user_settings_path.to_str().unwrap()])
-        .map_err(|e| e.to_string())?;
-    run_command(&["attrib", "-R", public_settings_path.to_str().unwrap()])
-        .map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn create_preset_watcher(state: State<'_, AppState>) -> Result<(), String> {
-    let mut app_config = load_all_config().map_err(|e| e.to_string())?;
-    let watcher_config = &mut app_config.watcher;
-    let valorant_config = &app_config.valorant;
-
-    let mut watcher_guard = state.watcher.lock().await;
-    *watcher_guard = Some(ProcessWatcher::new(
-        valorant_config.launcher_path.clone().unwrap(),
-        DisplayMode {
-            width: watcher_config.width,
-            height: watcher_config.height,
-            refresh_rate: watcher_config.fps,
-        },
-    ));
-    watcher_config.game_path = valorant_config.launcher_path.clone();
-    save_all_config(app_config).map_err(|e| e.to_string())?;
     Ok(())
 }

@@ -1,4 +1,10 @@
-use crate::state::AppState;
+use crate::configs::app_state::AppState;
+
+pub mod configs;
+pub mod games;
+pub mod utils;
+
+mod commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -9,29 +15,22 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             // 配置命令
-            config::load_all_config,
-            config::save_all_config,
-            config::reset_config,
+            commands::config::load_config,
+            commands::config::save_config,
+            commands::config::reset_config,
             // 监听命令
-            watcher::create_general_watcher,
-            watcher::toggle_watching,
-            watcher::get_watching_status,
-            watcher::get_gaming_status,
+            commands::watcher::toggle_watching,
+            commands::watcher::get_watching_status,
+            commands::watcher::get_gaming_status,
             // 无畏契约
-            valorant::init::scan_game_path,
-            valorant::launcher::start_game,
-            valorant::resulotion::restore_file_pemission,
-            valorant::resulotion::create_preset_watcher,
-            utils::hide_task,
+            commands::valorant::init::scan_game_path,
+            commands::valorant::init::create_preset_watcher,
+            commands::valorant::init::start_game,
+            commands::valorant::init::hide_windows_taskbar,
+            commands::valorant::cfg::modify_cfg_file,
+            commands::valorant::cfg::restore_file_pemission,
+            // 显示
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-pub mod config;
-pub mod constant;
-pub mod display;
-pub mod state;
-pub mod utils;
-pub mod valorant;
-pub mod watcher;

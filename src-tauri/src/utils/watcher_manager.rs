@@ -3,25 +3,21 @@ use std::{path::Path, sync::{
 }};
 
 use sysinfo::{ProcessesToUpdate, System};
-use tauri::State;
 use tokio::{
     sync::Mutex,
     task::JoinHandle,
     time::{interval, Duration},
 };
-use tracing::{debug, info, warn};
+use tracing::{info, warn};
 
-use crate::{
-    config::load_watcher_config,
-    display::{change_display_mode, restore_default_settings, DisplayMode},
-    state::AppState,
-};
+use crate::utils::display_manager::{DisplayMode, change_display_mode, restore_default_settings};
+
 
 pub struct ProcessWatcher {
     process_path: String,
     display_mode: DisplayMode,
     is_running: Arc<AtomicBool>,
-    task: Mutex<Option<JoinHandle<()>>>,
+    pub(crate) task: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl ProcessWatcher {
@@ -97,66 +93,5 @@ impl ProcessWatcher {
         } else {
             warn!("{} not watching", self.process_path);
         }
-    }
-}
-
-#[tauri::command]
-pub async fn toggle_watching(state: State<'_, AppState>) -> Result<bool, String> {
-    let mut watcher_guard = state.watcher.lock().await;
-
-    if let Some(watcher_instance) = watcher_guard.as_mut() {
-        if watcher_instance.task.lock().await.is_some() {
-            info!("Ready to stop");
-            watcher_instance.stop().await;
-            Ok(false)
-        } else {
-            info!("Ready to start");
-            watcher_instance.start().await;
-            Ok(true)
-        }
-    } else {
-        let watcher_config = load_watcher_config().map_err(|e| e.to_string())?;
-        *watcher_guard = Some(ProcessWatcher::new(
-            watcher_config.game_path.unwrap(),
-            DisplayMode {
-                width: watcher_config.width,
-                height: watcher_config.height,
-                refresh_rate: watcher_config.fps,
-            },
-        ));
-        if let Some(watcher_instance) = watcher_guard.as_mut() {
-            info!("Ready to start");
-            watcher_instance.start().await;
-            Ok(true)
-        } else {
-            Err("Failed to create watcher instance".to_string())
-        }
-    }
-}
-
-#[tauri::command]
-pub async fn get_gaming_status(state: State<'_, AppState>) -> Result<bool, String> {
-    let mut watcher_guard = state.watcher.lock().await;
-
-    if let Some(watcher_instance) = watcher_guard.as_mut() {
-        Ok(watcher_instance.is_running())
-    } else {
-        Ok(false)
-    }
-}
-
-#[tauri::command]
-pub async fn get_watching_status(state: State<'_, AppState>) -> Result<bool, String> {
-    let mut watcher_guard = state.watcher.lock().await;
-
-    if let Some(watcher_instance) = watcher_guard.as_mut() {
-        let task_guard = watcher_instance.task.lock().await;
-        if task_guard.is_some() {
-            Ok(true)
-        } else {
-            Ok(false)
-        }
-    } else {
-        Ok(false)
     }
 }
