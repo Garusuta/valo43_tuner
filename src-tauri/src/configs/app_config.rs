@@ -32,7 +32,8 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn load_app_config() -> Result<AppConfig, Box<dyn Error>> {
-        info!("Loading app configuration.");
+        // 会造成垃圾日志
+        // info!("Loading app configuration.");
         let config_content = fs::read_to_string(CONFIG_FILE.as_path())?;
         let app_config = toml::from_str::<AppConfig>(config_content.as_str())?;
         Ok(app_config)

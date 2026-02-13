@@ -18,6 +18,7 @@ pub struct DisplayMode {
     pub height: u32,
     pub refresh_rate: u32,
     pub bits_per_pixel: u32,
+    pub monitor_name: String,
 }
 
 impl Default for DisplayMode {
@@ -29,6 +30,7 @@ impl Default for DisplayMode {
                 height: 1080,
                 refresh_rate: 60,
                 bits_per_pixel: max_bits,
+                monitor_name: String::new(),
             },
             Err(e) => {
                 warn!(
@@ -40,6 +42,7 @@ impl Default for DisplayMode {
                     height: 1080,
                     refresh_rate: 60,
                     bits_per_pixel: 8,
+                    monitor_name: String::new(),
                 }
             }
         }
@@ -77,6 +80,7 @@ pub fn get_current_display_mode() -> Result<DisplayMode, DisplayError> {
     }
 }
 
+// 修改默认监视器的显示模式
 pub fn change_display_mode(mode: &DisplayMode, permanent: bool) -> Result<(), DisplayError> {
     unsafe {
         let mut devmode: DEVMODEW = mem::zeroed();
@@ -129,12 +133,12 @@ pub fn change_display_mode(mode: &DisplayMode, permanent: bool) -> Result<(), Di
     }
 }
 
+// 修改指定监视器的显示模式
 pub fn change_display_mode_for_monitor(
-    device_name: String,
     mode: &DisplayMode,
     permanent: bool,
 ) -> Result<(), DisplayError> {
-    let device_name_wide: Vec<u16> = OsStr::new(&device_name)
+    let device_name_wide: Vec<u16> = OsStr::new(&mode.monitor_name)
         .encode_wide()
         .chain(std::iter::once(0))
         .collect();

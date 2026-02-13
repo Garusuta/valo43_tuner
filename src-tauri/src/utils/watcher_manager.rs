@@ -1,6 +1,10 @@
-use std::{path::Path, sync::{
-    Arc, atomic::{AtomicBool, Ordering}
-}};
+use std::{
+    path::Path,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 
 use sysinfo::{ProcessesToUpdate, System};
 use tokio::{
@@ -10,8 +14,7 @@ use tokio::{
 };
 use tracing::{info, warn};
 
-use crate::utils::display_manager::{DisplayMode, change_display_mode, restore_default_settings};
-
+use crate::utils::display_manager::{DisplayMode, change_display_mode, change_display_mode_for_monitor, restore_default_settings};
 
 pub struct ProcessWatcher {
     pub process_path: String,
@@ -53,7 +56,11 @@ impl ProcessWatcher {
             let mut system = System::new_all();
 
             let on_start = || {
-                let _ = change_display_mode(&display_mode, false);
+                if display_mode.monitor_name.is_empty() {
+                    let _ = change_display_mode(&display_mode, false);
+                } else {
+                    let _ = change_display_mode_for_monitor(&display_mode, false);
+                }
             };
             let on_stop = || {
                 let _ = restore_default_settings();
@@ -64,10 +71,13 @@ impl ProcessWatcher {
 
                 system.refresh_processes(ProcessesToUpdate::All, true);
 
-                let running_now = system
-                    .processes()
-                    .iter()
-                    .any(|(_, p)| p.exe().unwrap_or(Path::new("s")).to_string_lossy().into_owned() == process_path);
+                let running_now = system.processes().iter().any(|(_, p)| {
+                    p.exe()
+                        .unwrap_or(Path::new("s"))
+                        .to_string_lossy()
+                        .into_owned()
+                        == process_path
+                });
 
                 let running_prev = is_running.swap(running_now, Ordering::Relaxed);
 

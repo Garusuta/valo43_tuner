@@ -18,6 +18,10 @@ pub fn run() {
             commands::config::load_config,
             commands::config::save_config,
             commands::config::reset_config,
+            // 多显示器
+            commands::display::scan_monitors,
+            commands::display::get_monitors_map,
+            commands::display::select_monitor,
             // 监听命令
             commands::watcher::toggle_watching,
             commands::watcher::get_watching_status,
@@ -29,7 +33,6 @@ pub fn run() {
             commands::valorant::init::hide_windows_taskbar,
             commands::valorant::cfg::modify_cfg_file,
             commands::valorant::cfg::restore_file_pemission,
-            // 显示
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
