@@ -312,8 +312,6 @@ const HomePage: React.FC = () => {
               checked={watchingStatus}
               onChange={handleToggleWatching}
               loading={switchLoading}
-              checkedChildren="开启"
-              unCheckedChildren="关闭"
               disabled={currentMode === 'multi-monitor' && !selectedMonitor && !watchingStatus}
             />
           </Space>
@@ -383,7 +381,7 @@ const HomePage: React.FC = () => {
       style={{ width: 600 }}
       extra={
         <Button icon={<ReloadOutlined />} onClick={refreshAllStatus} type="text">
-          刷新
+          刷新状态
         </Button>
       }
     >
