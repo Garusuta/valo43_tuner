@@ -26,6 +26,7 @@ pub async fn save_config(state: State<'_, AppState>, app_config: AppConfig) -> R
             height: app_config.watcher.height,
             width: app_config.watcher.width,
             refresh_rate: app_config.watcher.fps,
+            ..Default::default()
         };
         if watcher_instance.task.lock().await.is_some() {
             watcher_instance.stop().await;

@@ -1,7 +1,7 @@
 use std::{collections::HashMap, ffi::OsStr, mem, os::windows::ffi::OsStrExt};
 
 use thiserror::Error;
-use tracing::debug;
+use tracing::{debug, warn};
 use windows::{core::PCWSTR, Win32::Graphics::Gdi::*};
 
 #[derive(Error, Debug)]
@@ -17,6 +17,33 @@ pub struct DisplayMode {
     pub width: u32,
     pub height: u32,
     pub refresh_rate: u32,
+    pub bits_per_pixel: u32,
+}
+
+impl Default for DisplayMode {
+    fn default() -> Self {
+        let max_bits_result = get_max_bits_per_pixel();
+        match max_bits_result {
+            Ok(max_bits) => DisplayMode {
+                width: 1920,
+                height: 1080,
+                refresh_rate: 60,
+                bits_per_pixel: max_bits,
+            },
+            Err(e) => {
+                warn!(
+                    "Failed to obtain bit depth: {}, default 8 bits will be used. ",
+                    e
+                );
+                DisplayMode {
+                    width: 1920,
+                    height: 1080,
+                    refresh_rate: 60,
+                    bits_per_pixel: 8,
+                }
+            }
+        }
+    }
 }
 
 pub fn get_current_display_mode() -> Result<DisplayMode, DisplayError> {
@@ -42,6 +69,7 @@ pub fn get_current_display_mode() -> Result<DisplayMode, DisplayError> {
                 width: devmode.dmPelsWidth,
                 height: devmode.dmPelsHeight,
                 refresh_rate: devmode.dmDisplayFrequency,
+                ..Default::default()
             })
         } else {
             Err(DisplayError::EnumFailed)
@@ -56,7 +84,8 @@ pub fn change_display_mode(mode: &DisplayMode, permanent: bool) -> Result<(), Di
         devmode.dmPelsWidth = mode.width;
         devmode.dmPelsHeight = mode.height;
         devmode.dmDisplayFrequency = mode.refresh_rate;
-        devmode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY; // 指示有效字段
+        devmode.dmBitsPerPel = mode.bits_per_pixel;
+        devmode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY | DM_BITSPERPEL; // 指示有效字段
         debug!(
             "DEVMODEW size: {} bytes, as u16: {}",
             mem::size_of::<DEVMODEW>(),
@@ -117,7 +146,8 @@ pub fn change_display_mode_for_monitor(
         devmode.dmPelsWidth = mode.width;
         devmode.dmPelsHeight = mode.height;
         devmode.dmDisplayFrequency = mode.refresh_rate;
-        devmode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY;
+        devmode.dmBitsPerPel = mode.bits_per_pixel;
+        devmode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY | DM_BITSPERPEL; // 指示有效字段
         debug!(
             "DEVMODEW size: {} bytes, as u16: {}",
             mem::size_of::<DEVMODEW>(),
@@ -185,6 +215,44 @@ pub fn restore_default_settings() -> Result<(), DisplayError> {
                 result
             )))
         }
+    }
+}
+
+pub fn get_max_bits_per_pixel() -> Result<u32, DisplayError> {
+    let mut max_bits: u32 = 0;
+
+    unsafe {
+        let mut devmode: DEVMODEW = mem::zeroed();
+        devmode.dmSize = mem::size_of::<DEVMODEW>() as u16;
+
+        let mut index = 0u32;
+        loop {
+            let result = EnumDisplaySettingsW(
+                PCWSTR::null(),
+                ENUM_DISPLAY_SETTINGS_MODE(index),
+                &mut devmode,
+            );
+
+            if !result.as_bool() {
+                break;
+            }
+
+            // 更新最高位深
+            if devmode.dmBitsPerPel > max_bits {
+                max_bits = devmode.dmBitsPerPel;
+            }
+
+            index += 1;
+        }
+    }
+
+    if max_bits == 0 {
+        // 如果在循环结束后 max_bits 仍然是 0，说明没有成功枚举到任何模式
+        // 这可能意味着 EnumDisplaySettingsW 失败了，或者系统没有支持的显示模式
+        Err(DisplayError::EnumFailed)
+    } else {
+        debug!("The maximum bit depth obtained is {}", max_bits);
+        Ok(max_bits)
     }
 }
 

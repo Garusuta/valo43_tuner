@@ -34,6 +34,7 @@ pub mod init {
                 width: watcher_config.width,
                 height: watcher_config.height,
                 refresh_rate: watcher_config.fps,
+                ..Default::default()
             },
         ));
         watcher_config.game_path = valorant_config.launcher_path.clone();

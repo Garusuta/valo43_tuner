@@ -26,6 +26,7 @@ pub async fn toggle_watching(state: State<'_, AppState>) -> Result<bool, String>
                 width: watcher_config.width,
                 height: watcher_config.height,
                 refresh_rate: watcher_config.fps,
+                ..Default::default()
             },
         ));
         if let Some(watcher_instance) = watcher_guard.as_mut() {
