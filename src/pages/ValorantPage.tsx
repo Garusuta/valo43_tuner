@@ -7,6 +7,7 @@ import {
   SettingOutlined,
   UnlockOutlined,
   EyeInvisibleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { loadAllConfig } from '../ipc/config';
 import {
@@ -14,6 +15,7 @@ import {
   createPresetWatcher,
   restoreFilePermission,
   hideWindowsTask,
+  modifyCfgFile,
 } from '../ipc/valorant';
 import type { AppConfig } from '../types';
 
@@ -26,6 +28,7 @@ const ValorantPage: React.FC = () => {
   const [presetLoading, setPresetLoading] = useState<boolean>(false);
   const [permissionLoading, setPermissionLoading] = useState<boolean>(false);
   const [hideTaskLoading, setHideTaskLoading] = useState<boolean>(false);
+  const [cfgLoading, setCfgLoading] = useState<boolean>(false); // 新增 CFG loading 状态
 
   const loadConfig = useCallback(async () => {
     try {
@@ -45,6 +48,9 @@ const ValorantPage: React.FC = () => {
     init();
   }, [loadConfig]);
 
+  /**
+   * 获取游戏路径
+   */
   const handleScanGamePath = async () => {
     setScanLoading(true);
     try {
@@ -59,8 +65,10 @@ const ValorantPage: React.FC = () => {
     }
   };
 
+  /**
+   * 应用预设到监听器
+   */
   const handleCreatePresetWatcher = async () => {
-    // 使用 PascalCase
     if (!config?.Valorant.GamePath) {
       message.warning('请先获取游戏路径');
       return;
@@ -77,6 +85,9 @@ const ValorantPage: React.FC = () => {
     }
   };
 
+  /**
+   * 解锁文件权限
+   */
   const handleRestorePermission = async () => {
     setPermissionLoading(true);
     try {
@@ -89,6 +100,9 @@ const ValorantPage: React.FC = () => {
     }
   };
 
+  /**
+   * 隐藏任务栏
+   */
   const handleHideTask = async () => {
     setHideTaskLoading(true);
     try {
@@ -98,6 +112,27 @@ const ValorantPage: React.FC = () => {
       message.error(`隐藏任务栏失败: ${error}`);
     } finally {
       setHideTaskLoading(false);
+    }
+  };
+
+  /**
+   * 一键修改 CFG 文件
+   */
+  const handleModifyCfg = async () => {
+    // 前置校验：检查游戏路径
+    if (!config?.Valorant.GamePath) {
+      message.warning('请先获取游戏路径');
+      return;
+    }
+
+    setCfgLoading(true);
+    try {
+      await modifyCfgFile();
+      message.success('CFG 文件修改成功');
+    } catch (error) {
+      message.error(`CFG 文件修改失败: ${error}`);
+    } finally {
+      setCfgLoading(false);
     }
   };
 
@@ -113,7 +148,7 @@ const ValorantPage: React.FC = () => {
     <div style={{ maxWidth: 800, margin: '0 auto' }}>
       <Title level={3} style={{ marginBottom: 24 }}>无畏契约</Title>
 
-      {/* 当前游戏路径展示 - 使用 PascalCase */}
+      {/* 当前游戏路径展示 */}
       <Card style={{ marginBottom: 16 }}>
         <Title level={5}>当前游戏路径</Title>
         <div style={{ padding: 12, background: '#fafafa', borderRadius: 6, border: '1px solid #d9d9d9', marginBottom: 8 }}>
@@ -135,11 +170,12 @@ const ValorantPage: React.FC = () => {
       </Card>
 
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        {/* 获取游戏路径 */}
         <Card>
           <Space direction="vertical" style={{ width: '100%' }}>
             <Title level={5} style={{ margin: 0 }}>获取游戏路径</Title>
             <Paragraph type="secondary" style={{ margin: 0 }}>
-              自动扫描系统中正在运行的无畏契约游戏路径，扫描成功后将自动保存到配置文件。
+              自动扫描系统中已安装的无畏契约游戏路径，扫描成功后将自动保存到配置文件。
             </Paragraph>
             <Button
               type="primary"
@@ -152,6 +188,7 @@ const ValorantPage: React.FC = () => {
           </Space>
         </Card>
 
+        {/* 应用预设到监听器 */}
         <Card>
           <Space direction="vertical" style={{ width: '100%' }}>
             <Title level={5} style={{ margin: 0 }}>应用预设到监听器</Title>
@@ -168,34 +205,54 @@ const ValorantPage: React.FC = () => {
           </Space>
         </Card>
 
+        {/* 一键修改 CFG - 新增 */}
         <Card>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Title level={5} style={{ margin: 0 }}>解锁CFG只读</Title>
+            <Title level={5} style={{ margin: 0 }}>一键修改 CFG</Title>
             <Paragraph type="secondary" style={{ margin: 0 }}>
-              当你永远都不想用4:3了，请点击该按钮还原CFG权限。
+              一键修改无畏契约的 CFG 配置文件，优化游戏设置。需要先获取游戏路径。
+            </Paragraph>
+            <Button
+              danger
+              icon={<FileTextOutlined />}
+              onClick={handleModifyCfg}
+              loading={cfgLoading}
+            >
+              修改 CFG 文件
+            </Button>
+          </Space>
+        </Card>
+
+        {/* 解锁文件权限 */}
+        <Card>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Title level={5} style={{ margin: 0 }}>解锁文件权限</Title>
+            <Paragraph type="secondary" style={{ margin: 0 }}>
+              解锁无畏契约游戏文件的访问权限。
             </Paragraph>
             <Button
               icon={<UnlockOutlined />}
               onClick={handleRestorePermission}
               loading={permissionLoading}
             >
-              解锁只读
+              解锁权限
             </Button>
           </Space>
         </Card>
 
+        {/* 隐藏任务栏 */}
         <Card>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Title level={5} style={{ margin: 0 }}>显示任务栏</Title>
+            <Title level={5} style={{ margin: 0 }}>隐藏任务栏</Title>
             <Paragraph type="secondary" style={{ margin: 0 }}>
-              不显示任务栏，游戏会出现标题栏，下面被遮挡
+              隐藏系统任务栏，提供更沉浸的游戏体验。
             </Paragraph>
             <Button
               icon={<EyeInvisibleOutlined />}
               onClick={handleHideTask}
               loading={hideTaskLoading}
             >
-              显示任务栏
+              隐藏任务栏
             </Button>
           </Space>
         </Card>
