@@ -2,7 +2,6 @@ pub mod init {
     use tauri::State;
 
     use crate::{
-        commands::config::save_config,
         configs::{app_config::AppConfig, app_state::AppState},
         utils::{
             command_manager::{get_running_process_path, run_command},
@@ -18,7 +17,7 @@ pub mod init {
             .map(|p| p.to_string_lossy().into_owned());
         app_config.valorant.game_path = get_running_process_path("VALORANT.exe")
             .map(|p| p.parent().unwrap().to_string_lossy().into_owned());
-        save_config(app_config)?;
+        app_config.save_to_local().map_err(|e| e.to_string())?;
         Ok(())
     }
 
@@ -38,7 +37,7 @@ pub mod init {
             },
         ));
         watcher_config.game_path = valorant_config.launcher_path.clone();
-        save_config(app_config).map_err(|e| e.to_string())?;
+        app_config.save_to_local().map_err(|e| e.to_string())?;
         Ok(())
     }
 

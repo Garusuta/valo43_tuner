@@ -14,8 +14,8 @@ use crate::utils::display_manager::{DisplayMode, change_display_mode, restore_de
 
 
 pub struct ProcessWatcher {
-    process_path: String,
-    display_mode: DisplayMode,
+    pub process_path: String,
+    pub display_mode: DisplayMode,
     is_running: Arc<AtomicBool>,
     pub(crate) task: Mutex<Option<JoinHandle<()>>>,
 }

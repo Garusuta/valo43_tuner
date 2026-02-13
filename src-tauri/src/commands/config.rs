@@ -1,7 +1,13 @@
 use std::fs;
 
+use tauri::State;
+
 use crate::{
-    configs::app_config::{AppConfig, EmbedConfigs}, utils::constant_manager::CONFIG_FILE,
+    configs::{
+        app_config::{AppConfig, EmbedConfigs},
+        app_state::AppState,
+    },
+    utils::{constant_manager::CONFIG_FILE, display_manager::DisplayMode},
 };
 
 #[tauri::command]
@@ -11,8 +17,21 @@ pub fn load_config() -> Result<AppConfig, String> {
 }
 
 #[tauri::command]
-pub fn save_config(app_config: AppConfig) -> Result<(), String> {
+pub async fn save_config(state: State<'_, AppState>, app_config: AppConfig) -> Result<(), String> {
     app_config.save_to_local().map_err(|e| e.to_string())?;
+
+    let mut watcher_guard = state.watcher.lock().await;
+    if let Some(watcher_instance) = watcher_guard.as_mut() {
+        watcher_instance.display_mode = DisplayMode {
+            height: app_config.watcher.height,
+            width: app_config.watcher.width,
+            refresh_rate: app_config.watcher.fps,
+        };
+        if watcher_instance.task.lock().await.is_some() {
+            watcher_instance.stop().await;
+            watcher_instance.start().await;
+        }
+    }
     Ok(())
 }
 
