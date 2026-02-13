@@ -4,7 +4,7 @@ pub mod init {
     use crate::{
         configs::{app_config::AppConfig, app_state::AppState},
         utils::{
-            command_manager::{get_running_process_path, run_command},
+            command_manager::{get_running_process_path, run_command_detached},
             display_manager::DisplayMode,
             watcher_manager::ProcessWatcher,
         },
@@ -45,11 +45,12 @@ pub mod init {
     #[tauri::command]
     pub async fn start_game() -> Result<(), String> {
         let valorant_config = AppConfig::load_valrant_config().map_err(|e| e.to_string())?;
-        let launcher_path = valorant_config.launcher_path.unwrap();
-        run_command(&["start", "", launcher_path.as_str()]).map_err(|e| e.to_string())?;
+        let launcher_path = valorant_config.launcher_path.ok_or("Launcher path not set.")?;
+
+        run_command_detached(&["start", "", launcher_path.as_str()]).map_err(|e| e.to_string())?;
         Ok(())
     }
-    
+
     #[tauri::command]
     pub fn hide_windows_taskbar() -> Result<(), String> {
         Ok(())

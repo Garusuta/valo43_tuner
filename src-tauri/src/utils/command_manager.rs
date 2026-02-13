@@ -17,6 +17,15 @@ pub fn run_command(command: &[&str]) -> Result<String, Box<dyn Error>> {
     }
 }
 
+pub fn run_command_detached(command: &[&str]) -> Result<(), Box<dyn Error>> {
+    Command::new("cmd")
+        .arg("/C")
+        .args(command)
+        .spawn()?;
+    debug!("Running detached command: {:?}", command);
+    Ok(())
+}
+
 pub fn get_running_process_path(process_name: &str) -> Option<PathBuf> {
     let system = System::new_all();
 
