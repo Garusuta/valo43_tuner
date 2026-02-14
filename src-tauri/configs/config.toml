@@ -1,12 +1,12 @@
 [Watcher]
-GamePath = 'E:\Games\Tencent Games\VALORANT\live\VALORANT.exe'
-Width = 1568
+GamePath = 'E:\Program Files\ACLOS\Launcher\无畏契约登录器.exe'
+Width = 1440
 Height = 1080
 Fps = 144
 
 [Valorant]
-LauncherPath = ""
+LauncherPath = 'E:\Program Files\ACLOS\Launcher\无畏契约登录器.exe'
 GamePath = 'E:\Games\Tencent Games\VALORANT\live'
 
 [Development]
-Debug = true
+Debug = false
