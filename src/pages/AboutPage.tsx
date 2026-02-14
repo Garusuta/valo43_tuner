@@ -23,7 +23,7 @@ const CONFIG = {
   // 项目信息
   project: {
     name: 'FPSEnhancer',
-    version: '1.1.0',
+    version: '1.1.1',
     description: '自动监听进程，启动时切换到预设分辨率，退出后自动恢复',
     repoUrl: 'https://github.com/Garusuta/fps_enhancer',
     releaseUrl: 'https://github.com/Garusuta/fps_enhancer/releases',
