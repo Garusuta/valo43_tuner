@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "fps_enhancer",
+        "title": "FPSEnhancer v1.1.0 @Garusuta",
         "width": 1000,
         "height": 700,
         "transparent": true
